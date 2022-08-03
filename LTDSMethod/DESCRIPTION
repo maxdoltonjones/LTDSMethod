@@ -7,5 +7,6 @@ Maintainer: The package maintainer <maxdoltonjones@gmail.com>
 Description: Creating sampling protocols for LTDS surveys - such as transect placement.
 License: GPL-2
 Encoding: UTF-8
+Imports: raster, rgeos, dplyr, rgdal, readr
 LazyData: true
 RoxygenNote: 7.2.1
