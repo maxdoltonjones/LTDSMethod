@@ -80,4 +80,3 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot){
   }
   return(pilot.lines.crop)
 }
-
