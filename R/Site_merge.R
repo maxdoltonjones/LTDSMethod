@@ -25,8 +25,7 @@ site_merge <- function(shape1, shape2, zone, plot, save){
   shape_merge <- bind(site.1, site.2)
   #Plot merged site if plot = TRUE
   if(plot == T){
-    plot(site_merge)
-    plot(pilot.lines.crop, add = T)
+    plot(shape_merge)
   } else if(plot == F){
 
   }
@@ -37,7 +36,7 @@ site_merge <- function(shape1, shape2, zone, plot, save){
   } else if(save == F){
 
   }
-  return(site_merge)
+  return(shape_merge)
 }
 
 
