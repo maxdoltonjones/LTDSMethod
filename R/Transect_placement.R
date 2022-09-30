@@ -7,6 +7,7 @@
 #' @param site.poly A shape file used to clip the transect lines to fit the site
 #' @param zone The UTM zone of the shapefile/study site
 #' @param plot Do you want the transect placement to be plotted against the site?
+#' @param save Do you want to save the transect lines to the working directory?
 #' @return A SpatialLines object delineating transect placement
 #' @examples
 #' #Read in site shapefile file
@@ -16,7 +17,7 @@
 #' transect.lines <- tran_place(50, 0.5, "angle", site.poly, 1, plot = T)
 #'
 #' @export
-tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot){
+tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, save){
   #Get coordinate reference system from shapefile
   #CRS.shp <- site.poly@proj4string@projargs
   #Transform shapefile to SpatialPolygonsDataFrame
@@ -72,10 +73,18 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot){
   crs(pilot.lines) <- crs(site)
   #Cropping pilot lines to fit within study area
   pilot.lines.crop <- raster::crop(pilot.lines, site.poly)
+  data <- data.frame(lines=1:length(pilot.lines.crop))
+  final.lines <- SpatialLinesDataFrame(pilot.lines.crop, data, match.ID = FALSE)
   if(plot == T){
     plot(site)
     plot(pilot.lines.crop, add = T)
   } else if(plot == F){
+
+  }
+  if(save == T){
+    writeOGR(final.lines, ".", paste0("Transect_lines"),
+             driver = "ESRI Shapefile", overwrite = T)
+  } else if(save == F){
 
   }
   return(pilot.lines.crop)
