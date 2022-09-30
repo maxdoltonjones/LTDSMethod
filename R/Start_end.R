@@ -7,12 +7,11 @@
 #' @param save Do you want to save the SpatialPoints to the working directory?
 #' @return A SpatialPoints object showing start and end locations for LTDS lines
 #' @examples
-#' #Read in two site shapefiles needing to be merged
-#' shape1 <- readOGR(dsn = paste0("./shape1.shp"))
-#' shape2 <- readOGR(dsn = paste0("./shape2.shp"))
+#' #Read in SpatialLines object showing transect lines
+#' transect.lines <- readOGR(dsn = paste0("./Transect_lines.shp"))
 #'
-#' #Select required transect parameters and run function
-#' shape_merge <- site_merge(shape1, shape2, 1, plot = T, save = T)
+#' #Input transect lines, and delineate UTM zone
+#' transect.points <- start_end(transect.lines, 1, plot = T, save = T)
 #'
 #' @export
 start_end <- function(lines, zone, plot, save){
