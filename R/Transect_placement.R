@@ -75,6 +75,10 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
   pilot.lines.crop <- raster::crop(pilot.lines, site.poly)
   data <- data.frame(lines=1:length(pilot.lines.crop))
   final.lines <- SpatialLinesDataFrame(pilot.lines.crop, data, match.ID = FALSE)
+  #Save the full list of potential transect lines
+  saveRDS(pot.lts, file="Potential_transects.RData")
+  #and save the pilot lines r object too (needed for subsequent function)
+  saveRDS(pilot.lts, file="Pilot_transects.RData")
   if(plot == T){
     plot(site)
     plot(pilot.lines.crop, add = T)
