@@ -31,7 +31,7 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
   #Change all site values to equal 1 to simplify raster
   site <- reclassify(site.r, cbind(1, nrow(site.poly@data), 1), left=FALSE)
   site.size <- site@extent@ymax - site@extent@ymin
-  if(direction == "vert"){
+  if(direction == "N-S"){
     diff.ang <- site.size * cos(0 * pi / 180)
     ext.ang <- site.size - diff.ang
     lt.start <- round(runif(1, 1, tran.dist))
@@ -44,7 +44,7 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
                                       c(site@extent@ymin,
                                         site@extent@ymin+site.size)))), as.character(p))
     }
-  }else if(direction == "angle"){
+  }else if(direction == "NE-SW"){
     diff.ang <- site.size * cos(45 * pi / 180)
     ext.ang <- site.size - diff.ang
     lt.start <- round(runif(1, 1, tran.dist))
@@ -57,7 +57,7 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
                                       c(site@extent@ymin,
                                         site@extent@ymin+site.size)))), as.character(p))
     }
-  } else if(direction == "horz"){
+  } else if(direction == "E-W"){
   lt.start <- round(runif(1, 1, tran.dist))
   pot.lts <- seq(-site.size/2, (site.size+(site.size/2)), by = tran.dist) + lt.start
   pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
