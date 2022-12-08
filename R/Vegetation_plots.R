@@ -16,7 +16,7 @@
 #' @export
 veg_plot <- function(lines, intv, plot, save){
   n <- (gLength(lines))/intv
-  veg.point <- spsample(pilot.lines, n, "regular")
+  veg.point <- spsample(lines, n, "regular")
   veg.point <- SpatialPointsDataFrame(veg.point, data.frame(row.names=row.names(veg.point),
                                                             ID=1:length(veg.point)))
   if(plot == T){
