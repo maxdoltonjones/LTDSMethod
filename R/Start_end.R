@@ -41,6 +41,26 @@ start_end <- function(lines, zone, plot, save){
   coord.list <- SpatialPoints(coord.list, proj4string = CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
   coord.list <- SpatialPointsDataFrame(coord.list, data.frame(row.names=row.names(coord.list),
                                                               ID=1:length(coord.list)))
+
+  #Create dataframe with coordinates from lines
+  coords <- as.data.frame(coord.list@coords)
+  #Filter out every other coordinates for one side of lines
+  coord2 <- coords %>%
+    slice(which(row_number() %% 2 == 1))
+  #Delete first row to apply same methodology
+  temp.coord <- coords %>%
+    filter(!row_number() %in% c(1))
+  #Filter our every other row again
+  coord3 <- temp.coord %>%
+    slice(which(row_number() %% 2 == 1))
+  #Combine data
+  coord.com <- cbind(coord2, coord3)
+  #Add a transect number for each line
+  coord.com$Transect_ID <- c(1:nrow(coord.com))
+  #Rename the columns
+  colnames(coord.com) <- c("Start_x", "Start_y", "End_x", "End_y", "Transect_ID")
+  #Save the csv to working directory
+  write_csv(coord.com, "start_end_coord.csv")
   if(plot == T){
     plot(coord.list)
   } else if(plot == F){
