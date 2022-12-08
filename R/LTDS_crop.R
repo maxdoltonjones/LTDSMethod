@@ -13,7 +13,7 @@
 #' new_ltds_data <- ltds_crop(ltds_data = ltds_data, trunc = 5, save = T)
 #'
 #' @export
-LTDS_crop <- function(ltds_data, trunc){
+LTDS_crop <- function(ltds_data, trunc, save = T){
 
   #Remove any distance greater than the input truncation distance (trunc)
   ltds_data <- ltds_data[!(ltds_data$Distance > trunc),]
