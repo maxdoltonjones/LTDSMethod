@@ -18,12 +18,12 @@
 samp_effort <- function(points, zone, plot){
   l <- vector("list", nrow(points))
   for(i in 1:nrow(points)){
-    l[[i]] <- Lines(list(Line(cbind(c(as.numeric(points[i, 2]), as.numeric(points[i, 4])),
-                                    c(as.numeric(points[i, 3]), as.numeric(points[i, 5]))))),
+    l[[i]] <- Lines(list(Line(cbind(c(as.numeric(points[i, 1]), as.numeric(points[i, 3])),
+                                    c(as.numeric(points[i, 2]), as.numeric(points[i, 4]))))),
                     as.character(i))
   }
   lines <- SpatialLines(l)
-  zone <- 17
+  #zone <- 17
   crs(lines) <- crs(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep=''))
   effort <- gLength(lines)
   if(plot == T){
