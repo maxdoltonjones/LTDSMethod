@@ -1,0 +1,33 @@
+---
+title: "LTDSMethod vignette - Max Dolton Jones, 2022"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{LTDSMethod vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction to LTDSMethod
+
+The LTDSMethod package was designed for several main tasks:
+
+* Designing line transect distance sampling pilot surveys
+* Using pilot survey methodology to inform full LTDS surveys
+* Estimate the density of a species within a study area
+* Creating a summary of survey effort and results
+
+More specifically, the package was initially intended as a tool to aid monitoring
+efforts for translocated gopher tortoises throughout Florida. As a result, some
+of the functions are highly specific to gopher tortoise biology and conservation.
+However, LTDSMethod may be applicable for other studies/projects trying to
+implement LTDS methods. 
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include = FALSE}
+library(LTDSMethod)
+```
