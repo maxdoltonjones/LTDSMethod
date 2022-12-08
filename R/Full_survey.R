@@ -41,7 +41,9 @@ samp_full <- function(effort, site.poly, direction, nburr, cv, zone, plot, save)
   transect.lines <- readOGR(dsn = paste0("./Transect_lines.shp"))
 
   if(gLength(transect.lines) > E){
-    return(print("Target CV attained"))
+    x.val <- effort/enc.rate
+    cv.new <- round(sqrt(v/x.val)*100, digits = 2)
+    return(print(paste0("Target CV attained. CV = ", cv.new, "%")))
   }else if(gLength(transect.lines) < E){
 
     #Combine all (potential) lines and pilot lines
@@ -73,7 +75,7 @@ samp_full <- function(effort, site.poly, direction, nburr, cv, zone, plot, save)
         add.lts <- rem.lts
       }
 
-      if(direction == "vert"){
+      if(direction == "N-S"){
         diff.ang <- site.size * cos(0 * pi / 180)
         ext.ang <- site.size - diff.ang
         l <- vector("list", length(add.lts))
@@ -83,7 +85,7 @@ samp_full <- function(effort, site.poly, direction, nburr, cv, zone, plot, save)
                                           c(site@extent@ymin,
                                             site@extent@ymin+site.size)))), as.character(p))
         }
-      }else if(direction == "angle"){
+      }else if(direction == "NE-SW"){
         diff.ang <- site.size * cos(45 * pi / 180)
         ext.ang <- site.size - diff.ang
         l <- vector("list", length(add.lts))
@@ -93,7 +95,7 @@ samp_full <- function(effort, site.poly, direction, nburr, cv, zone, plot, save)
                                           c(site@extent@ymin,
                                             site@extent@ymin+site.size)))), as.character(p))
         }
-      } else if(direction == "horz"){
+      } else if(direction == "E-W"){
         l <- vector("list", length(add.lts))
         for(p in 1:length(add.lts)){
           l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin,
@@ -129,11 +131,14 @@ samp_full <- function(effort, site.poly, direction, nburr, cv, zone, plot, save)
 
   }
   if(save == T){
-    writeOGR(final.lines, ".", paste0("Add_transect_lines"),
+    writeOGR(final.add.lines, ".", paste0("Add_transect_lines"),
              driver = "ESRI Shapefile", overwrite = T)
   } else if(save == F){
 
   }
-  return(final.add.lines)
+    x.val <- effort/enc.rate
+    cv.new <- round(sqrt(v/x.val)*100, digits = 2)
+    print(paste0("CV = ", cv.new, "%"))
+    return(final.add.lines)
   }
 }
