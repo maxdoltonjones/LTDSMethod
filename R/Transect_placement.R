@@ -68,6 +68,19 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
                                     c(site@extent@ymin+pilot.lts[p],
                                       site@extent@ymin+pilot.lts[p])))), as.character(p))
     }
+  }else if(direction == "NW-SE"){
+    diff.ang <- site.size * cos(45 * pi / 180)
+    ext.ang <- site.size - diff.ang
+    lt.start <- round(runif(1, 1, tran.dist))
+    pot.lts <- seq(-site.size/2, (site.size+(site.size/2)), by = tran.dist) + lt.start
+    pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
+    l <- vector("list", length(pilot.lts))
+    for(p in 1:length(pilot.lts)){
+      l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin+ext.ang+pilot.lts[p],
+                                        site@extent@xmin-ext.ang+pilot.lts[p]),
+                                      c(site@extent@ymin,
+                                        site@extent@ymin+site.size)))), as.character(p))
+    }
   }
   pilot.lines <- SpatialLines(l)
   crs(pilot.lines) <- crs(site)
