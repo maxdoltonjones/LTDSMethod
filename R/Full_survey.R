@@ -4,7 +4,7 @@
 #' @param effort Distance in meters walked during the pilot survey
 #' @param direction The cardinal direction of the transects
 #' @param site.poly A shape file used to clip the transect lines to fit the site
-#' @param nburr Number of occupied burrows detected during the pilot survey
+#' @param ntort Number of occupied burrows detected during the pilot survey
 #' @param cv The target coefficient of variation for full LTDS survey (e.g. 0.17 = 17%)
 #' @param zone The UTM zone of the shapefile/study site
 #' @param plot Do you want the transect placement to be plotted against the site?
@@ -18,20 +18,20 @@
 #' effort <- samp_effort(start.end, zone = 17, plot = T)
 #'
 #' #Input resulting pilot effort into function
-#' full_survey <- samp_full(effort, site.poly, direction = "N-S", nburr = 100, cv = 0.17, zone = 17, plot = T, save = T)
+#' full_survey <- samp_full(effort, site.poly, direction = "N-S", ntort = 100, cv = 0.17, zone = 17, plot = T, save = T)
 #'
 #' #To view the effort needed, run:
 #' gLength(full_survey)
 #'
 #'
 #' @export
-samp_full <- function(effort, site.poly, direction, nburr, cv, zone, plot, save){
+samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save){
 
   #cv = % of CV aiming for (0.17 = 17%)
   cv.val <- cv
   #Calculate effort for 17% CV - using this percentage based on conversations
   #with Lora
-  enc.rate <- effort/nburr
+  enc.rate <- effort/ntort
   #v = approximate variance in density from pilot study
   #Keeping v as default from calculate.effort == 3
   v <- 3
