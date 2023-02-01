@@ -2,7 +2,7 @@
 #'
 #' Crops field data to remove observations outside of truncation distance and outliers
 #' @param ltds_data Raw field data from a full LTDS survey
-#' @param trunc The truncation distance (half distance between transects)
+#' @param tran.dist The distance between transect lines
 #' @param save Do you want to save the data to the working directory?
 #' @return A csv file of truncated ltds data
 #' @examples
@@ -10,11 +10,12 @@
 #' ltds_data <- read_csv("./LTDS_example_data.csv")
 #'
 #' #Input raw data into function
-#' new_ltds_data <- ltds_crop(ltds_data = ltds_data, trunc = 5, save = T)
+#' new_ltds_data <- ltds_crop(ltds_data = ltds_data, tran.dist = 50, save = T)
 #'
 #' @export
 LTDS_crop <- function(ltds_data, trunc, save = T){
 
+  trunc <- tran.dist/2
   #Remove any distance greater than the input truncation distance (trunc)
   ltds_data <- ltds_data[!(ltds_data$Distance > trunc),]
   #Arrange the data in descending order and then remove the highest 5%
