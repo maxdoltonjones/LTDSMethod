@@ -155,17 +155,39 @@ dens_est <-function(ltds_data, effort, area) {
 
   #mcmc.out$summary$all.chains
 
-  #Extrapolate from surveyed area to entire site: (400 acres = 162 hectares = 1620000 m2)
-  #prop.ef <- 2*L*Bx/1620000
-  #148/(prop.ef)
+  area.m <- area*4046.86
+  prop.ef <- 2*L*Bx/area.m
+  #extrapolate effort to all posterior distribution in chains 1-3
+  extrap.nt.1 <- mcmc.out$samples$chain1[,4]/prop.ef/area
+  extrap.nt.2 <- mcmc.out$samples$chain2[,4]/prop.ef/area
+  extrap.nt.3 <- mcmc.out$samples$chain3[,4]/prop.ef/area
+  #Plot posterior distribution
+  ggplot() +
+    geom_histogram(aes(x =extrap.nt.1), color = "grey", fill = "grey",
+                   binwidth = 0.05, alpha = 0.5) +
+    geom_histogram(aes(x =extrap.nt.2), color = "grey", fill = "grey",
+                   binwidth = 0.05, alpha = 0.5) +
+    geom_histogram(aes(x =extrap.nt.3), color = "grey", fill = "grey",
+                   binwidth = 0.05, alpha = 0.5) +
+    labs(x = "Tortoise density (/acre)", y = "Count") +
+    theme_classic()
 
-  #Save output to list object
+  ggsave(file = paste0("./Density_posterior_dist.png"), width = 200, height = 120,
+         dpi = 600, units = "mm")
 
   area.m <- area*4046.86
-  nt <-mcmc.out$summary$all.chains[4]
   prop.ef <- 2*L*Bx/area.m
+  nt <-mcmc.out$summary$all.chains[4,1]
+  hi <- mcmc.out$summary$all.chains[4,5]
+  lo <- mcmc.out$summary$all.chains[4,4]
   estim <- nt/prop.ef
+  estim.hi <- hi/prop.ef
+  estim.lo <- lo/prop.ef
   density <- estim/area
+  density.hi <- estim.hi/area
+  density.lo <- estim.lo/area
 
-  return(density)
+  all.results <- as_data_frame(cbind(density.lo, density, density.hi))
+
+  return(all.results)
 }
