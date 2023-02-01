@@ -37,14 +37,11 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
   v <- 3
   E <- v/cv.val^2 * enc.rate
 
-  #load in pilot lines from tran_place function
-  transect.lines <- readOGR(dsn = paste0("./Transect_lines.shp"))
-
-  if(gLength(transect.lines) > E){
+  if(effort > E){
     x.val <- effort/enc.rate
     cv.new <- round(sqrt(v/x.val)*100, digits = 2)
     return(print(paste0("Target CV attained. CV = ", cv.new, "%")))
-  }else if(gLength(transect.lines) < E){
+  }else if(effort < E){
 
     #Combine all (potential) lines and pilot lines
     pot.lts <- readRDS(file="Potential_transects.RData")
