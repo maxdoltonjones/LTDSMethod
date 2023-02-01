@@ -110,7 +110,7 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
 
 
       add.effort <- gLength(final.add.lines)
-      pilot.effort <- gLength(transect.lines)
+      pilot.effort <- effort
       comb.effort <- add.effort + pilot.effort
       #Increase percentage of pilot lines to survey
       perc <- perc + 0.1
