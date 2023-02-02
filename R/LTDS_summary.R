@@ -26,7 +26,10 @@ LTDS_summary <- function(effort = "NA", nburr = "NA",
                          burr.w.mn = "NA", burr.w.min = "NA",
                          burr.w.max = "NA", comm.comm = "NA",
                          occ = "NA", unocc = "NA", unk = "NA",
-                         site.name = "NA", tort.dens = "NA", tort.pop = "NA"){
+                         site.name = "NA", tort.dens = "NA",
+                         tort.dens.lo = "NA", tort.dens.hi = "NA",
+                         tort.pop = "NA", tort.pop.lo = "NA",
+                         tort.pop.hi = "NA"){
 
   rmarkdown::render('./vignettes/LTDS_summary.Rmd',
                     output_file = paste0('LTDS_report.pdf'),
@@ -42,7 +45,11 @@ LTDS_summary <- function(effort = "NA", nburr = "NA",
                       unk = unk,
                       site.name = site.name,
                       tort.dens = tort.dens,
-                      tort.pop = tort.pop
+                      tort.dens.lo = tort.dens.lo,
+                      tort.dens.hi = tort.dens.hi,
+                      tort.pop = tort.pop,
+                      tort.pop.lo = tort.pop.lo,
+                      tort.pop.hi = tort.pop.hi
                     ))
 
 }
