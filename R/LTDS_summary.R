@@ -44,7 +44,7 @@ LTDS_summary <- function(effort = "NA", nburr = "NA",
                       unocc = unocc,
                       unk = unk,
                       site.name = site.name,
-                      site.size = site.size
+                      site.size = site.size,
                       tort.dens = tort.dens,
                       tort.dens.lo = tort.dens.lo,
                       tort.dens.hi = tort.dens.hi,
