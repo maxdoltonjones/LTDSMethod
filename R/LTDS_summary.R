@@ -31,7 +31,7 @@ LTDS_summary <- function(effort = "NA", nburr = "NA",
                          tort.pop = "NA", tort.pop.lo = "NA",
                          tort.pop.hi = "NA"){
 
-  rmarkdown::render('./vignettes/LTDS_summary.Rmd',
+  rmarkdown::render('./LTDS_summary.Rmd',
                     output_file = paste0('LTDS_report.pdf'),
                     params = list(
                       effort = effort,
