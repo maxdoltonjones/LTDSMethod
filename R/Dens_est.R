@@ -170,6 +170,7 @@ dens_est <-function(ltds_data, effort, area) {
     geom_histogram(aes(x =extrap.nt.3), color = "grey", fill = "grey",
                    binwidth = 0.05, alpha = 0.5) +
     labs(x = "Tortoise density (/acre)", y = "Count") +
+    ggtitle("Posterior distribution - density estimate") +
     theme_classic()
 
   ggsave(file = paste0("./Density_posterior_dist.png"), width = 200, height = 120,
