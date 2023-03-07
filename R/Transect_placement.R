@@ -18,8 +18,10 @@
 #'
 #' @export
 tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, save){
-  #Get coordinate reference system from shapefile
-  #CRS.shp <- site.poly@proj4string@projargs
+    if(pil.perc < 0 | pil.perc > 100){
+    return(print("pil.perc must be a value between 0-100")
+  }
+  pil.perc <- pil.perc/100
   #Transform shapefile to SpatialPolygonsDataFrame
   site.p <- spTransform(site.poly, CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
   #Create an empty raster using the same extent as the shapefile
