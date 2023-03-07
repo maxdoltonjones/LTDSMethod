@@ -1,0 +1,510 @@
+---
+title: "Final LTDS Report"
+date: "`r Sys.Date()`"
+output: pdf_document
+always_allow_html: true
+params:
+  effort: "NA"
+  nburr: "NA"
+  burr.w.mn: "NA"
+  burr.w.min: "NA"
+  burr.w.max: "NA"
+  comm.comm: "NA"
+  occ: "NA"
+  unocc: "NA"
+  unk: "NA"
+  site.name: "NA"
+  site.size: "NA"
+  surv.date: "NA"
+  tort.dens: "NA"
+  tort.dens.lo: "NA"
+  tort.dens.hi: "NA"
+  tort.pop: "NA"
+  tort.pop.lo: "NA"
+  tort.pop.hi: "NA"
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+
+library(raster)
+library(rgeos)
+library(rgdal)
+library(dplyr)
+library(readr)
+library(nimble)
+library(terra)
+library(ggplot2)
+library(gt)
+library(knitr)
+library(imager)
+library(gstat)
+```
+# LTDS Summary - `r params$site.name`
+
+Test report for LTDSMethod package.
+
+### Overview
+
+We walked a total of __`r format(params$effort, scientific=FALSE)`__ m during our full LTDS survey, where we found a total of __`r params$nburr`__ burrows. We calculated a density of __`r params$tort.dens`__ tortoises/acre (range = __`r params$tort.dens.lo`__ - __`r params$tort.dens.hi`__ tortoises/acre), resulting in approximately __`r params$tort.pop`__ tortoises (range = __`r params$tort.pop.lo`__ - __`r params$tort.pop.hi`__) at the recipient site. We calculated a mean burrow width of __`r params$burr.w.mn`__ mm (range = __`r params$burr.w.min`__ - __`r params$burr.w.max`__).                                                                                                            
+
+```{r cv.obt, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+ltds_data <- read_csv("./LTDS_example_data.csv")
+yes.data <- ltds_data %>%
+  filter(Occupied == "Yes")
+
+enc.rate <- params$effort/nrow(yes.data)
+#v = approximate variance in density from pilot study
+#Keeping v as default from calculate.effort == 3
+v <- 3
+x.val <- params$effort/enc.rate
+cv.new <- round(sqrt(v/x.val)*100, digits = 2)
+
+n.occ <- nrow(yes.data)
+all.data <- as.data.frame(cbind(n.occ, params$effort, params$tort.pop, params$tort.pop.lo, params$tort.pop.hi, cv.new, params$tort.dens,
+                                params$tort.dens.lo, params$tort.dens.hi))
+colnames(all.data) <- c("N.occ", "Effort (m)", "D", "D UCI", "D LCI", "CV (%)", "N", "N UCI", "N LCI")
+#Create table
+all.data %>%
+  gt() %>%
+  
+  tab_header("Population and density estimates") %>%
+  cols_align(align = c("center"), columns = everything())
+
+```
+
+
+```{r burr.w.hist, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+ltds_data <- read_csv("./LTDS_example_data.csv")
+#Filter for size classes
+juv.data <- ltds_data %>%
+  filter(Burrow_width <= 135)
+juv.bur <- round((nrow(juv.data)/nrow(ltds_data))*100, digits = 2)
+
+suba.data <- ltds_data %>%
+  filter(Burrow_width > 135 & Burrow_width <= 220)
+suba.bur <- round((nrow(suba.data)/nrow(ltds_data))*100, digits = 2)
+
+suba.data.2 <- ltds_data %>%
+  filter(Burrow_width > 220 & Burrow_width <= 300)
+suba.bur.2 <- round((nrow(suba.data.2)/nrow(ltds_data))*100, digits = 2)
+
+adu.data <- ltds_data %>%
+  filter(Burrow_width > 300 & Burrow_width <= 350)
+adu.bur <- round((nrow(adu.data)/nrow(ltds_data))*100, digits = 2)
+
+adu.data.2 <- ltds_data %>%
+  filter(Burrow_width > 350)
+adu.bur.2 <- round((nrow(adu.data.2)/nrow(ltds_data))*100, digits = 2)
+
+bur.data <- as.data.frame(rbind(juv.bur, suba.bur, suba.bur.2,
+                                adu.bur, adu.bur.2))
+dem.data <- as.data.frame(rbind("<13.5", "13.5-22", "22-30", "30-35", ">35"))
+comb.data <- cbind(bur.data, dem.data)
+colnames(comb.data) <- c("Perc", "Demo")
+
+order <- factor(comb.data$Demo, level = c("<13.5", "13.5-22", "22-30", "30-35", ">35"))
+
+#Create frequency plot of burrow widths
+wh.plot <- ggplot(data = comb.data) +
+  #geom_density(fill = "grey") +
+  #geom_histogram(aes(fill = ..density..), color = "black",
+  #               binwidth = 20, alpha = 0.8) +
+  geom_col(aes(x = order, y = Perc, fill = order)) +
+  scale_fill_viridis_d(option = "viridis", begin = 0.3, end = 0.6) +
+  ylab("Percent of total (%)") +
+  xlab("Carapace length (cm)") +
+  ggtitle("Tortoise demographics") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+wh.plot
+```
+
+
+
+
+```{r summ.table, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+site.name <- params$site.name
+site.size <- params$site.size
+tot.burr <- sum(params$occ, params$unk, params$unocc)
+occ <- params$occ
+unocc <- params$unocc
+unk <- params$unk
+occ.rate <- round((occ/tot.burr)*100, digits = 1)
+
+all.data <- as.data.frame(cbind(tot.burr, occ, unocc, unk, occ.rate))
+colnames(all.data) <- c("Total burrows", "Occupied burrows", "Unoccupied burrows", "Unknown burrows", "Burrow occupany (%)")
+#Create table
+all.data %>%
+  gt() %>%
+  
+  tab_header("Burrow scoping results") %>%
+  cols_align(align = c("center"), columns = everything())
+
+#all.tab %>% cols_width(everything() ~ px(40))
+
+```
+
+```{r occu.figure, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+ltds_data <- read_csv("./LTDS_example_data.csv")
+#Filter for occupancy status
+no.data <- ltds_data %>%
+  filter(Occupied == "No")
+no.data <- round((nrow(no.data)/nrow(ltds_data))*100, digits = 2)
+
+yes.data <- ltds_data %>%
+  filter(Occupied == "Yes")
+yes.data <- round((nrow(yes.data)/nrow(ltds_data))*100, digits = 2)
+
+unk.data <- ltds_data %>%
+  filter(Occupied == "Unknown")
+unk.data <- round((nrow(unk.data)/nrow(ltds_data))*100, digits = 2)
+
+occ.data <- as.data.frame(rbind(no.data, yes.data, unk.data))
+stat.data <- as.data.frame(rbind("Unoccupied", "Occupied", "Unknown"))
+comb.data <- cbind(occ.data, stat.data)
+colnames(comb.data) <- c("Perc", "Stat")
+
+order <- factor(comb.data$Stat, level = c('Occupied', 'Unoccupied', 'Unknown'))
+
+#Plotting burrow types
+o.plot <- ggplot(data = comb.data) +
+  geom_col(aes(x = order, y = Perc, fill = order)) +
+  scale_fill_viridis_d(option = "viridis", begin = 0.3, end = 0.6) +
+  ylab("Percent of total (%)") +
+  xlab("Occupancy status") +
+  ggtitle("Burrow occupancy") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+o.plot
+```
+
+```{r occ.burr.dem, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+ltds_data <- read_csv("./LTDS_example_data.csv")
+
+#Filter only occupied burrows
+occ.data <- ltds_data %>%
+  filter(Occupied == "Yes")
+
+#Filter for size classes
+juv.data <- occ.data %>%
+  filter(Burrow_width <= 135)
+juv.bur <- round((nrow(juv.data)/nrow(occ.data))*100, digits = 2)
+
+suba.data <- occ.data %>%
+  filter(Burrow_width > 135 & Burrow_width <= 220)
+suba.bur <- round((nrow(suba.data)/nrow(occ.data))*100, digits = 2)
+
+suba.data.2 <- occ.data %>%
+  filter(Burrow_width > 220 & Burrow_width <= 300)
+suba.bur.2 <- round((nrow(suba.data.2)/nrow(occ.data))*100, digits = 2)
+
+adu.data <- occ.data %>%
+  filter(Burrow_width > 300 & Burrow_width <= 350)
+adu.bur <- round((nrow(adu.data)/nrow(occ.data))*100, digits = 2)
+
+adu.data.2 <- occ.data %>%
+  filter(Burrow_width > 350)
+adu.bur.2 <- round((nrow(adu.data.2)/nrow(occ.data))*100, digits = 2)
+
+bur.data <- as.data.frame(rbind(juv.bur, suba.bur, suba.bur.2,
+                                adu.bur, adu.bur.2))
+dem.data <- as.data.frame(rbind("<13.5", "13.5-22", "22-30", "30-35", ">35"))
+comb.data <- cbind(bur.data, dem.data)
+colnames(comb.data) <- c("Perc", "Demo")
+
+order <- factor(comb.data$Demo, level = c("<13.5", "13.5-22", "22-30", "30-35", ">35"))
+
+#Create frequency plot of burrow widths
+wh.plot <- ggplot(data = comb.data) +
+  #geom_density(fill = "grey") +
+  #geom_histogram(aes(fill = ..density..), color = "black",
+  #               binwidth = 20, alpha = 0.8) +
+  geom_col(aes(x = order, y = Perc, fill = order)) +
+  scale_fill_viridis_d(option = "viridis", begin = 0.3, end = 0.6) +
+  ylab("Percent of total (%)") +
+  xlab("Carapace length (cm)") +
+  ggtitle("Tortoise demographics") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+wh.plot
+```
+
+```{r occ.summ.table, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+ltds_data <- read_csv("./LTDS_example_data.csv")
+
+#Filter only occupied burrows
+occ.data <- ltds_data %>%
+  filter(Occupied == "Yes")
+
+max.wid <- round(max(occ.data$Burrow_width), digits = 2)
+min.wid <- round(min(occ.data$Burrow_width), digits = 2)
+mean.wid <- round(mean(occ.data$Burrow_width), digits = 2)
+
+all.data <- as.data.frame(cbind(mean.wid, min.wid, max.wid))
+colnames(all.data) <- c("Mean burrow width (mm)", "Min burrow width (mm)",
+                        "Max burrow width (mm)")
+#Create table
+all.data %>%
+  gt() %>%
+  
+  tab_header("Widths of occupied burrows") %>%
+  cols_align(align = c("center"), columns = everything())
+
+#all.tab %>% cols_width(everything() ~ px(40))
+
+```
+
+```{r det.map, echo=FALSE, warning=FALSE, message=FALSE, verbose = FALSE, error=FALSE}
+#site <- raster("./site_6_new.tif")
+site.2 <- readOGR("./site_6_new_poly.shp", verbose = FALSE)
+ltds_data <- read_csv("./LTDS_example_data_new.csv")
+ltds_data <- ltds_data %>%
+  filter(Occupied == "Yes")
+#Create frequency plot of burrow widths
+lines <- readOGR("./Transect_lines.shp", verbose = FALSE)
+lines.2 <- readOGR("./Add_transect_lines.shp", verbose = FALSE)
+ggplot() +
+  geom_polygon(data = site.2, aes(x = long, y = lat, group = group),
+               fill = "grey") +
+  geom_line(data = lines, aes(x = long, y = lat, group = group)) +
+  geom_line(data = lines.2, aes(x = long, y = lat, group = group)) +
+  geom_point(data = ltds_data, aes(x = X, y = Y),
+             size = 3, color = "red") +
+  #scale_fill_viridis_c(option = "mako", begin = 0.3, end = 0.8) +
+  #scale_color_viridis_d(option = "mako", begin = 0.3, end = 0.8) +
+  xlab("Easting") +
+  ylab("Northing") +
+  ggtitle("Locations of occupied burrows") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+```
+
+```{r det.dist.hist, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+#Create detection distance plot
+dh.plot <- ggplot(data = ltds_data, aes(x = Distance)) +
+  #geom_density(fill = "grey") +
+  geom_histogram(aes(fill = ..density..), color = "black",
+                 binwidth = 1, alpha = 0.8) +
+  scale_fill_viridis_c(option = "viridis", begin = 0.3, end = 0.6) +
+  ylab("Frequency") +
+  xlab("Detection distance (m)") +
+  ggtitle("Detection distances") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+dh.plot
+```
+
+```{r det.dist.dens, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+#Create detection distance plot
+dd.plot <- ggplot(data = ltds_data, aes(x = Distance)) +
+  geom_density(aes(y = ..density..), fill = "grey") +
+  #geom_histogram(aes(fill = ..density..), color = "black",
+  #               binwidth = 20, alpha = 0.8) +
+  scale_fill_viridis_c(option = "viridis", begin = 0.3, end = 0.6) +
+  ylab("Density") +
+  xlab("Detection distance (m)") +
+  ggtitle("Detection distances") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+dd.plot
+```
+
+```{r insert.plot, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+
+knitr::include_graphics("Density_posterior_dist.png")
+
+```
+
+
+
+```{r mort.plot, echo=FALSE, warning=FALSE, message=FALSE, verbose = FALSE, error=FALSE}
+#site <- raster("./site_6_new.tif")
+site.2 <- readOGR("./site_6_new_poly.shp", verbose = FALSE)
+mort_data <- read_csv("./Other_observation_form_v2.csv")
+#Create frequency plot of burrow widths
+lines <- readOGR("./Transect_lines.shp", verbose = FALSE)
+lines.2 <- readOGR("./Add_transect_lines.shp", verbose = FALSE)
+ggplot() +
+  geom_polygon(data = site.2, aes(x = long, y = lat, group = group),
+               fill = "grey") +
+  geom_line(data = lines, aes(x = long, y = lat, group = group)) +
+  geom_line(data = lines.2, aes(x = long, y = lat, group = group)) +
+  geom_point(data = mort_data, aes(x = Easting, y = Northing, pch = Species),
+             size = 3, color = "red") +
+  #scale_fill_viridis_c(option = "mako", begin = 0.3, end = 0.8) +
+  #scale_color_viridis_d(option = "mako", begin = 0.3, end = 0.8) +
+  xlab("Easting") +
+  ylab("Northing") +
+  ggtitle("Locations of commensal species") +
+  theme_classic() +
+  theme(legend.position = "bottom") +
+  guides(fill = "none",
+         pch = guide_legend(nrow = 3))
+
+```
+
+The most common commensal species discovered in burrows during scoping was the __`r params$comm.comm`__. A breakdown of the commensal species detection can be seen in the following table and figure:
+
+```{r commensals.table, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+#List of commensals
+mort_data <- read_csv("./Other_observation_form_v2.csv")
+#Filter out gopher tortoise mortalities
+comm.data <- mort_data %>%
+  filter(Species != "Gopher tortoise")
+comm.sp <- unique(comm.data$Species)
+
+#Create numbering dataframe for reordering ggplot
+#Make list for new val column
+com.list <- vector(mode = "list", length = length(comm.sp))
+for (i in 1:length(comm.sp)) {
+  new.sum <- sum(mort_data$Species == comm.sp[i])
+  com.list[i] <- new.sum
+}
+#Turn list into string
+val.data <- do.call(rbind.data.frame, com.list)
+colnames(val.data) <- c("val")
+#Join new variables
+comm.data <- cbind(comm.sp, val.data)
+colnames(comm.data) <- c("Species", "No.found")
+new.data <- comm.data[order(comm.data$No.found),]
+
+#Create table
+comm.data.gt <- new.data %>%
+  gt() %>%
+  tab_header("Commensal species discovered")
+
+comm.data.gt
+```
+
+```{r commensals.fig, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+mort_data <- read_csv("./Other_observation_form_v2.csv")
+comm.data <- mort_data %>%
+  filter(Species != "Gopher tortoise")
+comm.sp <- unique(comm.data$Species)
+
+#Create numbering dataframe for reordering ggplot
+#Make list for new val column
+com.list <- vector(mode = "list", length = length(comm.sp))
+for (i in 1:length(comm.sp)) {
+  new.sum <- sum(mort_data$Species == comm.sp[i])
+  com.list[i] <- new.sum
+}
+#Turn list into string
+val.data <- do.call(rbind.data.frame, com.list)
+colnames(val.data) <- c("val")
+#Join new variables
+comm.data <- cbind(comm.sp, val.data)
+
+#Plotting number of commensals
+c.plot <- ggplot(data = comm.data,) +
+  geom_col(aes(x = reorder(comm.sp, +val), y = val, fill = val), color = "black") +
+  scale_fill_viridis_c(option = "viridis", begin = 0.3, end = 0.6) +
+  scale_x_discrete(guide = guide_axis(n.dodge=2)) +
+  ylab("Frequency") +
+  xlab("Commensal species") +
+  ggtitle("Number of commensal species discovered") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+c.plot
+```
+
+```{r mortality.table, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE, verbose = FALSE}
+#List of commensals
+mort_data <- read_csv("./Other_observation_form_v2.csv")
+#Filter out gopher tortoise mortalities
+tort.mort <- mort_data %>%
+  filter(Species == "Gopher tortoise")
+#comm.sp <- unique(comm.data$Species)
+
+#Create table
+tort.mort.gt <- tort.mort %>%
+  gt() %>%
+  tab_header("Gopher tortoise mortalities")
+
+tort.mort.gt
+
+site.2 <- readOGR("./site_6_new_poly.shp", verbose = FALSE)
+lines <- readOGR("./Transect_lines.shp", verbose = FALSE)
+lines.2 <- readOGR("./Add_transect_lines.shp", verbose = FALSE)
+ggplot() +
+  geom_polygon(data = site.2, aes(x = long, y = lat, group = group),
+               fill = "grey") +
+  geom_line(data = lines, aes(x = long, y = lat, group = group)) +
+  geom_line(data = lines.2, aes(x = long, y = lat, group = group)) +
+  geom_point(data = tort.mort, aes(x = Easting, y = Northing, shape =     Status), size = 3, color = "red") +
+  #scale_fill_viridis_c(option = "mako", begin = 0.3, end = 0.8) +
+  #scale_color_viridis_d(option = "mako", begin = 0.3, end = 0.8) +
+  xlab("Easting") +
+  ylab("Northing") +
+  ggtitle("Gopher tortoise carcass discoveries") +
+  theme_classic() +
+  theme(legend.position = "bottom") +
+  guides(fill = "none")
+
+```
+
+```{r veg.map, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE, verbose = FALSE}
+
+#Read in vegetation data
+veg.data <- read_csv(file = "./veg_data_all.csv")
+#Read in shapefile
+site.2 <- readOGR("./site_6_new_poly.shp", verbose = FALSE)
+#Convert shapefile to raster
+#Create an empty raster using the same extent as the shapefile
+r <- raster(extent(site.2))
+#Set the resolution
+res(r) <- 5
+#Rasterize SpatialPolygonsDataFrame to new raster
+site.rast <- rasterize(site.2, r)
+
+#Convert raster to df
+df <- as.data.frame(site.rast, xy = T)
+colnames(df) <- c("x", "y", "layer")
+#Combine data frames
+df$layer <- 0
+new.veg <- rbind(df, veg.data)
+#new.veg[is.na(new.veg)] <- 0
+
+#Convert to raster
+#new.veg.2 <- new.veg %>%
+#  arrange(x)
+new.veg$x <- round(new.veg$x)
+new.veg$y <- round(new.veg$y)
+dfr <- rasterFromXYZ(new.veg, crs = "+proj=utm +zone=17 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+
+test <- aggregate(dfr, fact = 100, fun=mean, expand=FALSE)
+test <- disaggregate(test, 100)
+gs <- gstat(formula=layer~1, locations=~x+y, data=veg.data, nmax=5, set=list(idp = 0))
+nn <- interpolate(test, gs, debug.level=0)
+nnmsk <- mask(nn, site.2)
+
+
+#Plot raster to visualize site
+temp<-as.data.frame(nnmsk, xy = T)
+colnames(temp) <- c("x", "y", "layer")
+temp <- temp %>% na.omit()
+ggplot(temp) +
+  geom_tile(aes(x = x, y = y, fill = layer)) +
+  scale_fill_viridis_c(option = "plasma", begin = 0.3, end = 0.8) +
+  xlab("Easting") +
+  ylab("Northing") +
+  ggtitle("Vegetation cover") +
+  theme_classic() +
+  labs(fill = "Height (cm)")
+
+```
+
+
+End of report. 
