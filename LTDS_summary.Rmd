@@ -65,8 +65,7 @@ x.val <- params$effort/enc.rate
 cv.new <- round(sqrt(v/x.val)*100, digits = 2)
 
 n.occ <- nrow(yes.data)
-all.data <- as.data.frame(cbind(n.occ, params$effort, params$tort.pop, params$tort.pop.lo, params$tort.pop.hi, cv.new, params$tort.dens,
-                                params$tort.dens.lo, params$tort.dens.hi))
+all.data <- as.data.frame(cbind(n.occ, params$effort, params$tort.dens, params$tort.dens.lo, params$tort.dens.hi, cv.new, params$tort.pop, params$tort.pop.lo, params$tort.pop.hi))
 colnames(all.data) <- c("N.occ", "Effort (m)", "D", "D UCI", "D LCI", "CV (%)", "N", "N UCI", "N LCI")
 #Create table
 all.data %>%
@@ -230,7 +229,7 @@ wh.plot <- ggplot(data = comb.data) +
   scale_fill_viridis_d(option = "viridis", begin = 0.3, end = 0.6) +
   ylab("Percent of total (%)") +
   xlab("Carapace length (cm)") +
-  ggtitle("Tortoise demographics") +
+  ggtitle("Tortoise demographics - occupied burrows") +
   theme_classic() +
   theme(legend.position = "none")
 
