@@ -18,21 +18,29 @@
 #'
 #' @export
 tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, save){
-    if(pil.perc < 1 | pil.perc > 100){
-    return(print("pil.perc must be a value between 1-100"))
-  }
+    if(pil.perc < 0 | pil.perc > 100){
+    return(print("pil.perc must be a value between 0-100")
+    }
+  tran.dist <- 50
+  pil.perc <- 50
+  direction <- "NE-SW"
+  site.poly <- site.shp
+  zone <- 17
   pil.perc <- pil.perc/100
   #Transform shapefile to SpatialPolygonsDataFrame
   site.p <- spTransform(site.poly, CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
   #Create an empty raster using the same extent as the shapefile
-  r <- raster(extent(site.p))
+  r <- terra::rast(ext(site.p))
   #Set the resolution
   res(r) <- 5
+  #Convert polygon to spatvector
+  site.p2 <- vect(site.p)
   #Rasterize SpatialPolygonsDataFrame to new raster
-  site.r <- rasterize(site.p, r)
+  site.r <- terra::rasterize(site.p2, r)
   #Change all site values to equal 1 to simplify raster
-  site <- reclassify(site.r, cbind(1, nrow(site.poly@data), 1), left=FALSE)
-  site.size <- site@extent@ymax - site@extent@ymin
+  site <- classify(site.r, cbind(1, nrow(site.poly@data), 1))
+  site.size <- site@ptr[["extent"]][["vector"]][4]-site@ptr[["extent"]][["vector"]][3]
+  #site.size <- site@extent@ymax - site@extent@ymin
   if(direction == "N-S"){
     diff.ang <- site.size * cos(0 * pi / 180)
     ext.ang <- site.size - diff.ang
@@ -41,10 +49,10 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
     pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
     l <- vector("list", length(pilot.lts))
     for(p in 1:length(pilot.lts)){
-      l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin-ext.ang+pilot.lts[p],
-                                        site@extent@xmin+ext.ang+pilot.lts[p]),
-                                      c(site@extent@ymin,
-                                        site@extent@ymin+site.size)))), as.character(p))
+      l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1]-ext.ang+pilot.lts[p],
+                                        site@ptr[["extent"]][["vector"]][1]+ext.ang+pilot.lts[p]),
+                                      c(site@ptr[["extent"]][["vector"]][3],
+                                        site@ptr[["extent"]][["vector"]][3]+site.size)))), as.character(p))
     }
   }else if(direction == "NE-SW"){
     diff.ang <- site.size * cos(45 * pi / 180)
@@ -54,10 +62,10 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
     pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
     l <- vector("list", length(pilot.lts))
     for(p in 1:length(pilot.lts)){
-      l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin-ext.ang+pilot.lts[p],
-                                        site@extent@xmin+ext.ang+pilot.lts[p]),
-                                      c(site@extent@ymin,
-                                        site@extent@ymin+site.size)))), as.character(p))
+      l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1]-ext.ang+pilot.lts[p],
+                                        site@ptr[["extent"]][["vector"]][1]+ext.ang+pilot.lts[p]),
+                                      c(site@ptr[["extent"]][["vector"]][3],
+                                        site@ptr[["extent"]][["vector"]][3]+site.size)))), as.character(p))
     }
   } else if(direction == "E-W"){
   lt.start <- round(runif(1, 1, tran.dist))
@@ -65,10 +73,10 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
   pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
   l <- vector("list", length(pilot.lts))
   for(p in 1:length(pilot.lts)){
-    l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin,
-                                      site@extent@xmin+site.size),
-                                    c(site@extent@ymin+pilot.lts[p],
-                                      site@extent@ymin+pilot.lts[p])))), as.character(p))
+    l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1],
+                                      site@ptr[["extent"]][["vector"]][1]+site.size),
+                                    c(site@ptr[["extent"]][["vector"]][3]+pilot.lts[p],
+                                      site@ptr[["extent"]][["vector"]][3]+pilot.lts[p])))), as.character(p))
     }
   }else if(direction == "NW-SE"){
     diff.ang <- site.size * cos(45 * pi / 180)
@@ -78,16 +86,16 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
     pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
     l <- vector("list", length(pilot.lts))
     for(p in 1:length(pilot.lts)){
-      l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin+ext.ang+pilot.lts[p],
-                                        site@extent@xmin-ext.ang+pilot.lts[p]),
-                                      c(site@extent@ymin,
-                                        site@extent@ymin+site.size)))), as.character(p))
+      l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1]+ext.ang+pilot.lts[p],
+                                        site@ptr[["extent"]][["vector"]][1]-ext.ang+pilot.lts[p]),
+                                      c(site@ptr[["extent"]][["vector"]][3],
+                                        site@ptr[["extent"]][["vector"]][3]+site.size)))), as.character(p))
     }
   }
   pilot.lines <- SpatialLines(l)
   crs(pilot.lines) <- crs(site)
   #Cropping pilot lines to fit within study area
-  pilot.lines.crop <- raster::crop(pilot.lines, site.poly)
+  pilot.lines.crop <- terra::crop(pilot.lines, site.poly)
   data <- data.frame(lines=1:length(pilot.lines.crop))
   final.lines <- SpatialLinesDataFrame(pilot.lines.crop, data, match.ID = FALSE)
   #Save the full list of potential transect lines
