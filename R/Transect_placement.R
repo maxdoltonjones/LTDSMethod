@@ -19,7 +19,7 @@
 #' @export
 tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, save){
     if(pil.perc < 0 | pil.perc > 100){
-    return(print("pil.perc must be a value between 0-100")
+    return(print("pil.perc must be a value between 0-100"))
     }
   tran.dist <- 50
   pil.perc <- 50
