@@ -21,11 +21,6 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
     if(pil.perc < 0 | pil.perc > 100){
     return(print("pil.perc must be a value between 0-100"))
     }
-  tran.dist <- 50
-  pil.perc <- 50
-  direction <- "NE-SW"
-  site.poly <- site.shp
-  zone <- 17
   pil.perc <- pil.perc/100
   #Transform shapefile to SpatialPolygonsDataFrame
   site.p <- spTransform(site.poly, CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
