@@ -31,7 +31,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, include = FALSE}
 
-library(raster)
+#library(raster)
 library(rgeos)
 library(rgdal)
 library(dplyr)
@@ -460,9 +460,10 @@ ggplot() +
 veg.data <- read_csv(file = "./veg_data_all.csv")
 #Read in shapefile
 site.2 <- readOGR("./site_6_new_poly.shp", verbose = FALSE)
+site.2 <- vect(site.2)
 #Convert shapefile to raster
 #Create an empty raster using the same extent as the shapefile
-r <- raster(extent(site.2))
+r <- rast(ext(site.2))
 #Set the resolution
 res(r) <- 5
 #Rasterize SpatialPolygonsDataFrame to new raster
@@ -481,17 +482,17 @@ new.veg <- rbind(df, veg.data)
 #  arrange(x)
 new.veg$x <- round(new.veg$x)
 new.veg$y <- round(new.veg$y)
-dfr <- rasterFromXYZ(new.veg, crs = "+proj=utm +zone=17 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+dfr <- rast(new.veg, crs = "+proj=utm +zone=17 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", type = "xyz")
 
-test <- aggregate(dfr, fact = 100, fun=mean, expand=FALSE)
-test <- disaggregate(test, 100)
+test <- terra::aggregate(dfr, fact = 100, fun=mean, expand=FALSE)
+test <- disagg(test, 100)
 gs <- gstat(formula=layer~1, locations=~x+y, data=veg.data, nmax=5, set=list(idp = 0))
 nn <- interpolate(test, gs, debug.level=0)
 nnmsk <- mask(nn, site.2)
 
-
 #Plot raster to visualize site
-temp<-as.data.frame(nnmsk, xy = T)
+temp <- as.data.frame(nnmsk, xy = T)
+temp <- as.data.frame(cbind(temp[,1], temp[,2], temp[,3]))
 colnames(temp) <- c("x", "y", "layer")
 temp <- temp %>% na.omit()
 ggplot(temp) +
