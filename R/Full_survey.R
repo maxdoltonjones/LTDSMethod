@@ -128,7 +128,7 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
        #final.add.lines <- SpatialLinesDataFrame(pilot.lines, data, match.ID = FALSE)
 
       #crs(add.lines.crop) <- paste("+proj=utm + zone=", 17, " ellps=WGS84", sep='')
-      add.effort <- sum(perim(add.lines.crop))
+      suppressWarnings(add.effort <- sum(perim(add.lines.crop)))
       pilot.effort <- effort
       comb.effort <- add.effort + pilot.effort
       #Increase percentage of pilot lines to survey

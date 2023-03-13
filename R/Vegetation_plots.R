@@ -14,9 +14,22 @@
 #' veg.plot <- veg_plot(transect.lines, 75, plot = T, save = T)
 #'
 #' @export
-veg_plot <- function(lines, intv, plot, save){
-  n <- (gLength(lines))/intv
-  veg.point <- spsample(lines, n, "regular")
+veg_plot <- function(points, intv, plot, save){
+  #start.end <- read_csv("./start_end_coord.csv")
+  se.list <- vector("list", nrow(points))
+  for (i in 1:nrow(points)) {
+    veg.line <- cbind(c(as.numeric(points[i,1]), as.numeric(points[i,3])),
+                c(as.numeric(points[i,2]), as.numeric(points[i,4])))
+    veg.line <- Line(veg.line)
+    veg.line <- Lines(list(veg.line), ID = paste("ID", i))
+    se.list[[i]] <- veg.line
+  }
+  veg.lines <- SpatialLines(se.list)
+  #df <- data.frame(len = sapply(1:length(Sl), function(i) gLength(Sl[i, ])))
+  #rownames(df) <- sapply(1:length(Sl), function(i) Sl@lines[[i]]@ID)
+  #Sldf <- SpatialLinesDataFrame(Sl, data = df)
+  n <- gLength(veg.lines)/intv
+  veg.point <- spsample(veg.lines, n, "regular")
   veg.point <- SpatialPointsDataFrame(veg.point, data.frame(row.names=row.names(veg.point),
                                                             ID=1:length(veg.point)))
   if(plot == T){

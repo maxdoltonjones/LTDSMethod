@@ -161,19 +161,20 @@ dens_est <-function(ltds_data, effort, area) {
   extrap.nt.1 <- mcmc.out$samples$chain1[,4]/prop.ef/area
   extrap.nt.2 <- mcmc.out$samples$chain2[,4]/prop.ef/area
   extrap.nt.3 <- mcmc.out$samples$chain3[,4]/prop.ef/area
+  extrap.nt.4 <- rbind(extrap.nt.1, extrap.nt.2, extrap.nt.3)
   #Plot posterior distribution
   ggplot() +
-    geom_histogram(aes(x =extrap.nt.1), color = "grey", fill = "grey",
-                   binwidth = 0.05, alpha = 0.5) +
-    geom_histogram(aes(x =extrap.nt.2), color = "grey", fill = "grey",
-                   binwidth = 0.05, alpha = 0.5) +
-    geom_histogram(aes(x =extrap.nt.3), color = "grey", fill = "grey",
-                   binwidth = 0.05, alpha = 0.5) +
+    geom_histogram(aes(x =extrap.nt.4), color = "black", fill = "grey",
+                   binwidth = 0.05) +
+    #geom_histogram(aes(x =extrap.nt.2), color = "grey", fill = "grey",
+    #               binwidth = 0.05) +
+    #geom_histogram(aes(x =extrap.nt.3), color = "grey", fill = "grey",
+    #               binwidth = 0.05) +
     labs(x = "Tortoise density (/acre)", y = "Count") +
     ggtitle("Posterior distribution - density estimate") +
     theme_classic()
 
-  ggsave(file = paste0("./Density_posterior_dist.png"), width = 200, height = 120,
+  ggsave(file = paste0("./Density_posterior_dist.png"), width = 160, height = 120,
          dpi = 600, units = "mm")
 
   area.m <- area*4046.86

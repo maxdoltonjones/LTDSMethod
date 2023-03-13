@@ -15,10 +15,10 @@
 #'
 #' @export
 start_end <- function(lines, zone, plot, save){
-  crd.full <- as.data.frame(crds(pilot.lines))
+  crd.full <- as.data.frame(crds(lines))
   coord.list <- vector(mode = "list", length = nrow(crd.full)/2)
   for (i in 1:length(lines)) {
-    crd.test <- as.data.frame(crds(pilot.lines[i,]))
+    crd.test <- as.data.frame(crds(lines[i,]))
     line.list <- vector(mode = "list", length = nrow(crd.test))
       for (j in 1:nrow(crd.test)) {
         if(j %% 2 == 0){
