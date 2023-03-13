@@ -25,7 +25,7 @@ samp_effort <- function(points, zone, plot){
   lines <- SpatialLines(l)
   #zone <- 17
   crs(lines) <- crs(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep=''))
-  effort <- gLength(lines)
+  effort <- sum(perim(lines))
   if(plot == T){
     plot(lines)
   } else if(plot == F){

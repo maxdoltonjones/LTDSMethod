@@ -173,7 +173,7 @@ dens_est <-function(ltds_data, effort, area) {
     ggtitle("Posterior distribution - density estimate") +
     theme_classic()
 
-  ggsave(file = paste0("./Density_posterior_dist.png"), width = 160, height = 120,
+  ggsave(file = paste0("./Density_posterior_dist.png"), width = 200, height = 120,
          dpi = 600, units = "mm")
 
   area.m <- area*4046.86

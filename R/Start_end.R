@@ -15,52 +15,45 @@
 #'
 #' @export
 start_end <- function(lines, zone, plot, save){
-  coord.list <- vector(mode = "list", length = length(lines@lines))
-  for (i in 1:length(lines@lines)) {
-    if(length(lines@lines[[i]]@Lines) > 1){
-      ext.list <- vector(mode = "list", length = 1)
-      coord.list <- c(coord.list, ext.list)
-      for (j in 1:length(lines@lines[[i]]@Lines)) {
-        xy1 <- as.data.frame(t(lines@lines[[i]]@Lines[[j]]@coords[1,]))
-        xy2 <- as.data.frame(t(lines@lines[[i]]@Lines[[j]]@coords[2,]))
-        xy <- rbind(xy1, xy2)
-        if(j == 1){
-          coord.list[[i]] <- xy
-        } else if(j > 1){
-          coord.list[[length(coord.list)]] <- xy
+  crd.full <- as.data.frame(crds(pilot.lines))
+  coord.list <- vector(mode = "list", length = nrow(crd.full)/2)
+  for (i in 1:length(lines)) {
+    crd.test <- as.data.frame(crds(pilot.lines[i,]))
+    line.list <- vector(mode = "list", length = nrow(crd.test))
+      for (j in 1:nrow(crd.test)) {
+        if(j %% 2 == 0){
+          next
+        }else {
+        xy1 <- as.data.frame(crd.test[j,])
+        xy2 <- as.data.frame(crd.test[j+1,])
+        xy <- cbind(xy1, xy2)
+        colnames(xy) <- c("Start_x", "Start_y", "End_x", "End_y")
+        line.list[[j]] <- xy
         }
       }
-    } else if(length(lines@lines[[i]]@Lines) == 1){
-      xy1 <- as.data.frame(t(lines@lines[[i]]@Lines[[1]]@coords[1,]))
-      xy2 <- as.data.frame(t(lines@lines[[i]]@Lines[[1]]@coords[2,]))
-      xy <- rbind(xy1, xy2)
-      coord.list[[i]] <- xy
-    }
+    line.list <- line.list[lapply(line.list,length)>0]
+    line.list <- do.call(rbind.data.frame, line.list)
+    coord.list[[i]] <- line.list
   }
+#  new.list <- vector(mode = "list", length = 2)
+#  for(p in 1:length(new.list)){
+#    coord.list.test <- coord.list[[p]]
+#    #colnames(coord.list.test) <- c("Start_x", "Start_y", "End_x", "End_y")
+#    new.list[[p]] <- coord.list.test
+#  }
+  #coord.list <- coord.list[lapply(coord.list,length)>0]
   coord.list <- do.call(rbind.data.frame, coord.list)
+  #new.list.test <- do.call(rbind.data.frame, new.list)
   coord.list <- SpatialPoints(coord.list, proj4string = CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
   coord.list <- SpatialPointsDataFrame(coord.list, data.frame(row.names=row.names(coord.list),
                                                               ID=1:length(coord.list)))
 
   #Create dataframe with coordinates from lines
   coords <- as.data.frame(coord.list@coords)
-  #Filter out every other coordinates for one side of lines
-  coord2 <- coords %>%
-    slice(which(row_number() %% 2 == 1))
-  #Delete first row to apply same methodology
-  temp.coord <- coords %>%
-    filter(!row_number() %in% c(1))
-  #Filter our every other row again
-  coord3 <- temp.coord %>%
-    slice(which(row_number() %% 2 == 1))
-  #Combine data
-  coord.com <- cbind(coord2, coord3)
   #Add a transect number for each line
-  coord.com$Transect_ID <- c(1:nrow(coord.com))
-  #Rename the columns
-  colnames(coord.com) <- c("Start_x", "Start_y", "End_x", "End_y", "Transect_ID")
+  coords$Transect_ID <- c(1:nrow(coords))
   #Save the csv to working directory
-  write_csv(coord.com, "start_end_coord.csv")
+  write_csv(coords, "start_end_coord.csv")
   if(plot == T){
     plot(coord.list)
   } else if(plot == F){

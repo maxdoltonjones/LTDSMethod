@@ -52,17 +52,25 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
     perc <- 0.1
 
 
-    site.p <- spTransform(site.poly, CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
+    if(class(site.poly) == "SpatialPolygonsDataFrame"){
+      site.p2 <- vect(site.poly)
+    } else {
+      site.p2 <- site.poly
+    }
+    crs(site.p2) <- paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')
+    #site.p <- spTransform(site.poly, CRS(paste("+proj=utm + zone=", zone, " ellps=WGS84", sep='')))
     #Create an empty raster using the same extent as the shapefile
-    r <- raster(extent(site.p))
+    r <- terra::rast(ext(site.p2))
     #Set the resolution
     res(r) <- 5
+    #Convert polygon to spatvector
+    #site.p2 <- vect(site.p)
     #Rasterize SpatialPolygonsDataFrame to new raster
-    site.r <- rasterize(site.p, r)
+    site.r <- r
     #Change all site values to equal 1 to simplify raster
-    site <- reclassify(site.r, cbind(1, nrow(site.poly@data), 1), left=FALSE)
-    site.size <- site@extent@ymax - site@extent@ymin
-
+    site <- classify(site.r, cbind(1, nrow(site.p2), 1))
+    site.size <- site@ptr[["extent"]][["vector"]][4]-site@ptr[["extent"]][["vector"]][3]
+    
     while(TRUE)
     {
       #Select 10% of remaining lots to add on to survey effort
@@ -77,39 +85,50 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
         ext.ang <- site.size - diff.ang
         l <- vector("list", length(add.lts))
         for(p in 1:length(add.lts)){
-          l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin-ext.ang+add.lts[p],
-                                            site@extent@xmin+ext.ang+add.lts[p]),
-                                          c(site@extent@ymin,
-                                            site@extent@ymin+site.size)))), as.character(p))
+          l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1]-ext.ang+add.lts[p],
+                                            site@ptr[["extent"]][["vector"]][1]+ext.ang+add.lts[p]),
+                                          c(site@ptr[["extent"]][["vector"]][3],
+                                            site@ptr[["extent"]][["vector"]][3]+site.size)))), as.character(p))
         }
       }else if(direction == "NE-SW"){
         diff.ang <- site.size * cos(45 * pi / 180)
         ext.ang <- site.size - diff.ang
         l <- vector("list", length(add.lts))
         for(p in 1:length(add.lts)){
-          l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin-ext.ang+add.lts[p],
-                                            site@extent@xmin+ext.ang+add.lts[p]),
-                                          c(site@extent@ymin,
-                                            site@extent@ymin+site.size)))), as.character(p))
+          l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1]-ext.ang+add.lts[p],
+                                            site@ptr[["extent"]][["vector"]][1]+ext.ang+add.lts[p]),
+                                          c(site@ptr[["extent"]][["vector"]][3],
+                                            site@ptr[["extent"]][["vector"]][3]+site.size)))), as.character(p))
         }
       } else if(direction == "E-W"){
         l <- vector("list", length(add.lts))
         for(p in 1:length(add.lts)){
-          l[[p]] <- Lines(list(Line(cbind(c(site@extent@xmin,
-                                            site@extent@xmin+site.size),
-                                          c(site@extent@ymin+add.lts[p],
-                                            site@extent@ymin+add.lts[p])))), as.character(p))
-        }
+          l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1],
+                                            site@ptr[["extent"]][["vector"]][1]+site.size),
+                                          c(site@ptr[["extent"]][["vector"]][3]+add.lts[p],
+                                            site@ptr[["extent"]][["vector"]][3]+add.lts[p])))), as.character(p))
+        } 
+        }else if(direction == "NW-SE"){
+          diff.ang <- site.size * cos(45 * pi / 180)
+          ext.ang <- site.size - diff.ang
+          l <- vector("list", length(add.lts))
+          for(p in 1:length(pilot.lts)){
+            l[[p]] <- Lines(list(Line(cbind(c(site@ptr[["extent"]][["vector"]][1]+ext.ang+add.lts[p],
+                                              site@ptr[["extent"]][["vector"]][1]-ext.ang+add.lts[p]),
+                                            c(site@ptr[["extent"]][["vector"]][3],
+                                              site@ptr[["extent"]][["vector"]][3]+site.size)))), as.character(p))
+          }
       }
-      add.lines <- SpatialLines(l)
-      crs(add.lines) <- crs(site)
-      #Cropping pilot lines to fit within study area
-      add.lines.crop <- raster::crop(add.lines, site.poly)
-      data <- data.frame(lines=1:length(add.lines.crop))
-      final.add.lines <- SpatialLinesDataFrame(add.lines.crop, data, match.ID = FALSE)
+        add.lines <- SpatialLines(l)
+        crs(add.lines) <- crs(site)
+        #Cropping pilot lines to fit within study area
+        add.lines.new <- vect(add.lines)
+        add.lines.crop <- terra::crop(add.lines.new, site.p2)
+       #data <- data.frame(lines=1:length(add.lines.crop))
+       #final.add.lines <- SpatialLinesDataFrame(pilot.lines, data, match.ID = FALSE)
 
-
-      add.effort <- gLength(final.add.lines)
+      #crs(add.lines.crop) <- paste("+proj=utm + zone=", 17, " ellps=WGS84", sep='')
+      add.effort <- sum(perim(add.lines.crop))
       pilot.effort <- effort
       comb.effort <- add.effort + pilot.effort
       #Increase percentage of pilot lines to survey
@@ -128,14 +147,16 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
 
   }
   if(save == T){
-    writeOGR(final.add.lines, ".", paste0("Add_transect_lines"),
-             driver = "ESRI Shapefile", overwrite = T)
+    #writeOGR(final.add.lines, ".", paste0("Add_transect_lines"),
+    #         driver = "ESRI Shapefile", overwrite = T)
+    writeVector(add.lines.crop, "./Add_transect_lines.shp",
+                overwrite = T)
   } else if(save == F){
 
   }
     x.val <- effort/enc.rate
     cv.new <- round(sqrt(v/x.val)*100, digits = 2)
     print(paste0("CV = ", cv.new, "%"))
-    return(final.add.lines)
+    return(add.lines.crop)
   }
-}
+  }
