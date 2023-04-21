@@ -22,7 +22,13 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
   site.r <- r
   #Change all site values to equal 1 to simplify raster
   site <- classify(site.r, cbind(1, nrow(site.p2), 1))
-  site.size <- site@ptr[["extent"]][["vector"]][4]-site@ptr[["extent"]][["vector"]][3]
+  site.size.x <- site@ptr[["extent"]][["vector"]][4]-site@ptr[["extent"]][["vector"]][3]
+  site.size.y <- site@ptr[["extent"]][["vector"]][2]-site@ptr[["extent"]][["vector"]][1]
+  if(site.size.x > site.size.y){
+    site.size <- site.size.x
+    } else if(site.size.y > site.size.x){
+    site.size <- site.size.y
+    }
   #site.size <- site@extent@ymax - site@extent@ymin
   if(direction == "N-S"){
     diff.ang <- site.size * cos(0 * pi / 180)
