@@ -69,7 +69,7 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
     site.r <- r
     #Change all site values to equal 1 to simplify raster
     site <- classify(site.r, cbind(1, nrow(site.p2), 1))
-    site.size <- site@ptr[["extent"]][["vector"]][4]-site@ptr[["extent"]][["vector"]][3]
+    site.size <- site@ptr[["extent"]][["vector"]][2]-site@ptr[["extent"]][["vector"]][1]
     
     while(TRUE)
     {
