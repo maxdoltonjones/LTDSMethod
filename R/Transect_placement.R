@@ -46,6 +46,7 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
   }else if(direction == "NE-SW"){
     diff.ang <- site.size * cos(45 * pi / 180)
     ext.ang <- site.size - diff.ang
+    tran.dist <- tran.dist + (tran.dist*0.16)
     lt.start <- round(runif(1, 1, tran.dist))
     pot.lts <- seq(-site.size/2, (site.size+(site.size/2)), by = tran.dist) + lt.start
     pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
@@ -70,6 +71,7 @@ tran_place <- function(tran.dist, pil.perc, direction, site.poly, zone, plot, sa
   }else if(direction == "NW-SE"){
     diff.ang <- site.size * cos(45 * pi / 180)
     ext.ang <- site.size - diff.ang
+    tran.dist <- tran.dist + (tran.dist*0.16)
     lt.start <- round(runif(1, 1, tran.dist))
     pot.lts <- seq(-site.size/2, (site.size+(site.size/2)), by = tran.dist) + lt.start
     pilot.lts <- sort(sample(pot.lts, round(length(pot.lts)*pil.perc)))
