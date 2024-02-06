@@ -270,7 +270,7 @@ ltds_data <- ltds_data %>%
 #Create frequency plot of burrow widths
 lines <- readOGR("./Transect_lines.shp", verbose = FALSE)
 lines.2 <- readOGR("./Add_transect_lines.shp", verbose = FALSE)
-ggplot() +
+det.map <- ggplot() +
   geom_polygon(data = site.2, aes(x = long, y = lat, group = group),
                fill = "grey") +
   geom_line(data = lines, aes(x = long, y = lat, group = group)) +
@@ -284,6 +284,8 @@ ggplot() +
   ggtitle("Locations of occupied burrows") +
   theme_classic() +
   theme(legend.position = "none")
+
+  det.map + coord.fixed(ratio = 1)
 
 ```
 
@@ -334,7 +336,7 @@ mort_data <- read_csv("./Other_observation_form_v2.csv")
 #Create frequency plot of burrow widths
 lines <- readOGR("./Transect_lines.shp", verbose = FALSE)
 lines.2 <- readOGR("./Add_transect_lines.shp", verbose = FALSE)
-ggplot() +
+comm.map <- ggplot() +
   geom_polygon(data = site.2, aes(x = long, y = lat, group = group),
                fill = "grey") +
   geom_line(data = lines, aes(x = long, y = lat, group = group)) +
@@ -350,6 +352,7 @@ ggplot() +
   theme(legend.position = "bottom") +
   guides(fill = "none",
          pch = guide_legend(nrow = 3))
+ comm.map + coord.fixed(ratio = 1)
 
 ```
 
@@ -434,7 +437,7 @@ tort.mort.gt
 site.2 <- readOGR("./site_6_new_poly.shp", verbose = FALSE)
 lines <- readOGR("./Transect_lines.shp", verbose = FALSE)
 lines.2 <- readOGR("./Add_transect_lines.shp", verbose = FALSE)
-ggplot() +
+mort.map <- ggplot() +
   geom_polygon(data = site.2, aes(x = long, y = lat, group = group),
                fill = "grey") +
   geom_line(data = lines, aes(x = long, y = lat, group = group)) +
@@ -448,6 +451,8 @@ ggplot() +
   theme_classic() +
   theme(legend.position = "bottom") +
   guides(fill = "none")
+
+  mort.map + coord.fixed(ratio = 1)
 
 ```
 
