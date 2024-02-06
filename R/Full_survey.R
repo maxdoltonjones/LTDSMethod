@@ -70,7 +70,13 @@ samp_full <- function(effort, site.poly, direction, ntort, cv, zone, plot, save)
     #Change all site values to equal 1 to simplify raster
     site <- classify(site.r, cbind(1, nrow(site.p2), 1))
     site.size <- site@ptr[["extent"]][["vector"]][2]-site@ptr[["extent"]][["vector"]][1]
-    
+    site.size.x <- site@ptr[["extent"]][["vector"]][2] - site@ptr[["extent"]][["vector"]][1]
+    site.size.y <- site@ptr[["extent"]][["vector"]][4] - site@ptr[["extent"]][["vector"]][3]
+    if(site.size.x > site.size.y){
+    site.size <- site.size.x
+  }else{
+    site.size <- site.size.y
+  }
     while(TRUE)
     {
       #Select 10% of remaining lots to add on to survey effort
